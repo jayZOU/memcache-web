@@ -1,0 +1,35 @@
+{
+  "name": "memcache-web",
+  "version": "0.0.1",
+  "description": " very simple web GUI for memcached",
+  "main": "index.js",
+  "scripts": {
+    "start": "babel-node index",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "memcached",
+    "gui"
+  ],
+  "author": "jayzou",
+  "license": "MIT",
+  "dependencies": {
+    "body-parser": "^1.17.2",
+    "ejs": "^2.5.6",
+    "express": "^4.15.3",
+    "memcached": "^2.2.2",
+    "pmcc": "0.0.5"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.24.1",
+    "babel-core": "^6.0.0",
+    "babel-loader": "^6.0.0",
+    "babel-plugin-transform-async-to-generator": "^6.24.1",
+    "babel-plugin-transform-runtime": "^6.0.0",
+    "babel-polyfill": "^6.23.0",
+    "babel-preset-es2015": "^6.0.0",
+    "babel-preset-stage-2": "^6.0.0",
+    "babel-register": "^6.23.0",
+    "babel-runtime": "^6.0.0"
+  }
+}

@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>memcache-gui</title>
+	<link rel="stylesheet" href="https://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+	<style>
+		#app{
+			text-align: center;
+			margin: 20px;
+		}
+		a{
+			cursor:pointer
+		}
+	</style>
+</head>
+<body>
+	<div id="app">
+
+		<div class="alert alert-warning" v-show="err.isShow" role="alert" style="position: absolute;width: 100%;">
+		    <strong>Warning!</strong> {{err.msg}}
+		</div>
+
+		<div class="modal fade bs-example-modal-sm" id="myModal" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel">
+		    <div class="modal-dialog modal-sm" role="document">
+		        <div class="modal-content">
+				    <div class="modal-header">
+					    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+					    <h4 class="modal-title">add cache</h4>
+					</div>
+					<div class="modal-body">
+						<div class="form-horizontal">
+						    <div class="form-group">
+						        <label for="inputEmail3" class="col-sm-2 control-label">key</label>
+						        <div class="col-sm-10">
+						            <input type="text" class="form-control" placeholder="key" v-model="add.key">
+						        </div>
+						    </div>
+						    <div class="form-group">
+						        <label for="inputPassword3" class="col-sm-2 control-label">value</label>
+						        <div class="col-sm-10">
+						            <input type="text" class="form-control" placeholder="value" v-model="add.value">
+						        </div>
+						    </div>
+						    <div class="form-group">
+						        <label for="inputPassword3" class="col-sm-2 control-label">lifetime</label>
+						        <div class="col-sm-10">
+						            <input type="number" class="form-control" placeholder="lifetime" v-model="add.lifetime">
+						        </div>
+						    </div>
+						    <div class="form-group">
+							    <div>
+							        <button class="btn btn-primary" @click="addBtn">save</button>
+							    </div>
+							</div>
+
+						</div>
+
+					</div>
+				</div>
+<!-- /.modal-content -->
+
+		    </div>
+		</div>
+
+
+
+		<h1 class="title">memcache-gui</h1>
+		<table class="table table-hover table-bordered table-my">
+			<thead>
+				<tr>
+					<th class="text-center">key</th>
+					<th class="text-center">value</th>
+					<th class="text-center">attr</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr v-for="(item, index) in cache">
+					<td>{{item.key}}</td>
+					<td>{{item.value}}</td>
+					<td><a @click="del(item.key, index)">删除</a> | <a @click="update(item.key, item.value)">修改</a></td>
+				</tr>
+			</tbody>
+		</table>
+		<button type="button" class="btn btn-primary" data-toggle="modal" data-target=".bs-example-modal-sm">添加</button>
+		<button type="button" class="btn btn-danger">清空</button>
+	</div>
+	<script src="https://cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+	<script src="https://cdn.bootcss.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+	<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+	<script src="https://unpkg.com/vue"></script>
+	<script>
+		$('#myModal').on('shown.bs.modal', function () {
+		  $('#myInput').focus()
+		})
+	</script>
+	<script>
+		var app = new Vue({
+			el: '#app',
+		  	data: {
+		  		err: {
+		  			isShow: false,
+		  			msg: ''
+		  		},
+		  		add: {
+		  			key: '',
+		  			value: '',
+		  			lifetime: '',
+		  			isShow: false,
+		  		},
+		  		cache: [],
+		  	},
+		  	created: function(){
+		  		var that = this;
+		  		// console.log('created');
+		  		axios.get('/memcacher/allData')
+				  .then(function (response) {
+				  	console.log(response);
+				  	if(response.data.err_code != 0){
+				  		that.err = {
+				  			isShow: true,
+				  			msg: `缓存为空或者服务器异常(code:${response.data.err_code})`
+				  		}
+				  		setTimeout(function(){
+				  			that.err.isShow = false
+				  		}, 5000);
+				  	}else{
+				  		that.cache = response.data.data;
+				  	}
+				  })
+				  .catch(function (error) {
+				    console.log(error);
+				  });
+		  	},
+		  	methods: {
+		  		del: function(key, index){
+		  			let that = this;
+		  			console.log(key);
+		  			console.log(index);
+		  			axios.delete('/memcacher/del/' + key)
+		  				.then(function(response){
+		  					console.log(response);
+		  					if(response.data.err_code == 0){
+		  						that.cache.splice(index, 1);
+		  					}
+
+		  				})
+		  				.catch(function(err){
+		  					console.log(err);
+		  				})
+		  		},
+		  		addBtn: function(){
+		  			let that = this;
+		  			// this.add.isShow = true;
+		  			console.log(this.add);
+		  			axios.post('/memcacher/add', {
+		  				key: that.add.key,
+		  				value: that.add.value,
+		  				lifetime: that.add.lifetime
+		  			})
+		  				.then(function(response){
+		  					console.log(response);
+		  					let isEmpty = false;
+		  					for(let i = 0, len = that.cache.length; i < len; i++){
+		  						if(that.cache[i].key == that.add.key){
+		  							that.cache[i].value = that.add.value;
+		  							isEmpty = true;
+		  						}
+		  					}
+		  					if(!isEmpty){
+			  					that.cache.push({
+			  						key: that.add.key,
+			  						value: that.add.value
+			  					})
+		  						
+		  					}
+		  					$('#myModal').modal('hide')
+		  				})
+		  				.catch(function(err){
+		  					console.log(err);
+		  				})
+
+		  		},
+		  		update: function(key, value){
+		  			$('#myModal').modal('show');
+		  			this.add.key = key;
+		  			this.add.value = value;
+		  		}
+		  	},
+
+		})
+	</script>
+</body>
+</html>
